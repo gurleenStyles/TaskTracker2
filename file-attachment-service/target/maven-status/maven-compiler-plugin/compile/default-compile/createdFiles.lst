@@ -1,2 +1,3 @@
-com\fileattachment\controller\FileAttachmentController.class
+com\fileattachment\controller\FileAttachmentController$FileAttachment.class
 com\fileattachment\FileAttachmentServiceApplication.class
+com\fileattachment\controller\FileAttachmentController.class

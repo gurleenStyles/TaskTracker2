@@ -17,4 +17,12 @@ public class HomeController {
         }
         return "home";//looks for home.html file in templates folder
     }
+    
+    @GetMapping("/microservices-test")
+    public String microservicesTest(@AuthenticationPrincipal User user, Model model) {
+        if (user != null) {
+            model.addAttribute("username", user.getUsername());
+        }
+        return "microservices-test";
+    }
 }

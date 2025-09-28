@@ -210,6 +210,10 @@
             background: #ffa502;
         }
         
+        .quick-action-btn:nth-child(6) {
+            background: #7b68ee;
+        }
+        
         .quick-action-btn:hover {
             transform: translate(-3px, -3px) rotate(-2deg);
             box-shadow: 9px 9px 0px var(--shadow-color);
@@ -326,6 +330,7 @@
             <a href="/pages/analytics" class="quick-action-btn">📊 Analytics</a>
             <a href="/pages/categories" class="quick-action-btn">🏷️ Categories</a>
             <a href="/pages/notifications" class="quick-action-btn">🔔 Notifications</a>
+            <a href="/microservices-test" target="_blank" class="quick-action-btn">🧪 Test Microservices</a>
         </div>
         
         <div class="features-grid">
@@ -357,6 +362,11 @@
             <div class="feature-card" onclick="navigateToFeature('/pages/notifications')">
                 <h3>🔔 Get Notifications</h3>
                 <p>Stay informed with timely reminders and updates about your tasks and upcoming deadlines.</p>
+            </div>
+            
+            <div class="feature-card" onclick="navigateToFeatureNewTab('/microservices-test')">
+                <h3>🧪 Test Microservices</h3>
+                <p>Explore and test the User Profile and File Attachment microservices with comprehensive testing interfaces.</p>
             </div>
         </div>
     </div>

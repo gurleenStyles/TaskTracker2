@@ -1,2 +1,4 @@
+com\userprofile\controller\UserProfileController$CreateProfileRequest.class
+com\userprofile\controller\UserProfileController$UserProfile.class
 com\userprofile\UserProfileServiceApplication.class
 com\userprofile\controller\UserProfileController.class

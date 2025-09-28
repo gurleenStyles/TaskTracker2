@@ -21,6 +21,10 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -40,9 +44,22 @@ public class AuthController {
 
     // This runs first after the javascript is called step 1
     @PostMapping("/register")
-    public MeResponse register(@RequestBody RegisterRequest req) {
-        AppUser user = userService.registerUser(req.username(), req.password(), req.email());
-        return new MeResponse(user.getId(), user.getUsername(), user.getEmail(), user.getRole());
+    public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
+        try {
+            AppUser user = userService.registerUser(req.username(), req.password(), req.email());
+            MeResponse response = new MeResponse(user.getId(), user.getUsername(), user.getEmail(), user.getRole());
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Validation Error");
+            error.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Server Error");
+            error.put("message", "Registration failed. Please try again.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
     }
 
     @GetMapping("/me")
@@ -62,14 +79,28 @@ public class AuthController {
 
     // JWT login endpoint
     @PostMapping("/login")
-    public String login(@RequestBody LoginRequest req) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(req.username(), req.password()));
-        if (authentication.isAuthenticated()) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(req.username());
-            return jwtUtil.generateToken(userDetails.getUsername());
-        } else {
-            throw new RuntimeException("Invalid credentials");
+    public ResponseEntity<?> login(@RequestBody LoginRequest req) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(req.username(), req.password()));
+            if (authentication.isAuthenticated()) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(req.username());
+                String token = jwtUtil.generateToken(userDetails.getUsername());
+                Map<String, String> response = new HashMap<>();
+                response.put("token", token);
+                response.put("username", userDetails.getUsername());
+                return ResponseEntity.ok(response);
+            } else {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Authentication Failed");
+                error.put("message", "Invalid credentials");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+            }
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Authentication Failed");
+            error.put("message", "Invalid credentials");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
         }
     }
 

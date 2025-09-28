@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskTracker - Microservices Testing Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #f5f5f5;
+            --bg-secondary: #ffffff;
+            --bg-accent: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --border-color: #000000;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+            --btn-primary: #ff6b6b;
+            --btn-secondary: #4ecdc4;
+            --card-bg: #ffffff;
+            --success-color: #2ed573;
+            --error-color: #ff4757;
+            --warning-color: #ffa502;
+        }
+        
+        [data-theme="dark"] {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-accent: linear-gradient(135deg, #ff4757, #3742fa);
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --border-color: #ffffff;
+            --shadow-color: rgba(255, 255, 255, 0.2);
+            --btn-primary: #ff4757;
+            --btn-secondary: #3742fa;
+            --card-bg: #2c2c2c;
+            --success-color: #5fdd00;
+            --error-color: #ff6b6b;
+            --warning-color: #ffb700;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Space Grotesk', monospace;
+            background: var(--bg-primary);
+            min-height: 100vh;
+            color: var(--text-primary);
+        }
+        
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-accent);
+            opacity: 0.05;
+            z-index: -1;
+            animation: gradientShift 8s ease-in-out infinite alternate;
+        }
+        
+        @keyframes gradientShift {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(30deg); }
+        }
+        
+        .navbar {
+            background: var(--card-bg);
+            border: 3px solid var(--border-color);
+            padding: 1rem 2rem;
+            box-shadow: 8px 8px 0px var(--shadow-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 1rem;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .nav-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .theme-toggle, .back-btn {
+            background: var(--btn-secondary);
+            border: 2px solid var(--border-color);
+            color: white;
+            padding: 0.7rem 1.2rem;
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            box-shadow: 4px 4px 0px var(--shadow-color);
+            transition: all 0.2s ease;
+            font-family: inherit;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .theme-toggle:hover, .back-btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px var(--shadow-color);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .page-title {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .page-title h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            margin-bottom: 1rem;
+            background: var(--bg-accent);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .services-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .service-card {
+            background: var(--card-bg);
+            border: 3px solid var(--border-color);
+            padding: 2rem;
+            box-shadow: 8px 8px 0px var(--shadow-color);
+            transition: all 0.3s ease;
+        }
+        
+        .service-card:hover {
+            transform: translate(-3px, -3px);
+            box-shadow: 12px 12px 0px var(--shadow-color);
+        }
+        
+        .service-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .service-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .status-indicator {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--border-color);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+        
+        .status-up {
+            background: var(--success-color);
+            color: white;
+        }
+        
+        .status-down {
+            background: var(--error-color);
+            color: white;
+        }
+        
+        .status-checking {
+            background: var(--warning-color);
+            color: white;
+        }
+        
+        .service-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+        
+        .btn {
+            background: var(--btn-primary);
+            border: 2px solid var(--border-color);
+            color: white;
+            padding: 0.8rem 1.2rem;
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            box-shadow: 4px 4px 0px var(--shadow-color);
+            transition: all 0.2s ease;
+            font-family: inherit;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+        
+        .btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px var(--shadow-color);
+        }
+        
+        .btn:disabled {
+            background: var(--text-secondary);
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            background: var(--btn-secondary);
+        }
+        
+        .btn-success {
+            background: var(--success-color);
+        }
+        
+        .btn-danger {
+            background: var(--error-color);
+        }
+        
+        .service-content {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 2px solid var(--border-color);
+            padding: 1rem;
+            background: var(--bg-secondary);
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+        }
+        
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+        
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--btn-secondary);
+            box-shadow: 2px 2px 0px var(--shadow-color);
+        }
+        
+        .response-area {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            padding: 1rem;
+            margin-top: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .response-success {
+            border-color: var(--success-color);
+            background: rgba(46, 213, 115, 0.1);
+        }
+        
+        .response-error {
+            border-color: var(--error-color);
+            background: rgba(255, 71, 87, 0.1);
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        .tab {
+            padding: 0.8rem 1.2rem;
+            border: 2px solid var(--border-color);
+            border-bottom: none;
+            background: var(--bg-secondary);
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+        
+        .tab.active {
+            background: var(--btn-secondary);
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .file-drop-zone {
+            border: 3px dashed var(--border-color);
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .file-drop-zone:hover, .file-drop-zone.dragover {
+            border-color: var(--btn-secondary);
+            background: rgba(78, 205, 196, 0.1);
+        }
+        
+        .file-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .file-item:last-child {
+            border-bottom: none;
+        }
+        
+        .file-info {
+            flex: 1;
+        }
+        
+        .file-name {
+            font-weight: 600;
+            margin-bottom: 0.2rem;
+        }
+        
+        .file-meta {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        
+        .file-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .btn-small {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+        }
+        
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        
+        .error-message {
+            color: var(--error-color);
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .navbar {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .page-title h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-gradient"></div>
+    
+    <nav class="navbar">
+        <div class="logo">🧪 Microservices Test Lab</div>
+        <div class="nav-controls">
+            <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
+            <a href="/" class="back-btn">← Dashboard</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="page-title">
+            <h1>Microservices Testing Dashboard</h1>
+            <p>Test and interact with User Profile and File Attachment microservices</p>
+        </div>
+        
+        <div class="services-grid">
+            <!-- User Profile Service -->
+            <div class="service-card">
+                <div class="service-header">
+                    <h2 class="service-title">👤 User Profile Service</h2>
+                    <div id="profile-status" class="status-indicator status-checking">Checking...</div>
+                </div>
+                
+                <div class="service-actions">
+                    <button class="btn" onclick="checkProfileHealth()">Health Check</button>
+                    <button class="btn btn-secondary" onclick="loadAllProfiles()">Load All</button>
+                    <button class="btn btn-success" onclick="createDemoProfile()">Demo Data</button>
+                </div>
+                
+                <div class="tabs">
+                    <button class="tab active" onclick="switchProfileTab('create')">Create</button>
+                    <button class="tab" onclick="switchProfileTab('list')">List</button>
+                    <button class="tab" onclick="switchProfileTab('search')">Search</button>
+                </div>
+                
+                <div class="service-content">
+                    <!-- Create Profile Tab -->
+                    <div id="profile-create" class="tab-content active">
+                        <form id="profile-form">
+                            <div class="form-group">
+                                <label for="firstName">First Name</label>
+                                <input type="text" id="firstName" name="firstName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="lastName">Last Name</label>
+                                <input type="text" id="lastName" name="lastName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" id="email" name="email" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="phone">Phone</label>
+                                <input type="text" id="phone" name="phone">
+                            </div>
+                            <div class="form-group">
+                                <label for="bio">Bio</label>
+                                <textarea id="bio" name="bio" rows="3"></textarea>
+                            </div>
+                            <button type="submit" class="btn">Create Profile</button>
+                        </form>
+                    </div>
+                    
+                    <!-- List Profiles Tab -->
+                    <div id="profile-list" class="tab-content">
+                        <div id="profiles-container">
+                            <p>Click "Load All" to fetch profiles</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Search Profiles Tab -->
+                    <div id="profile-search" class="tab-content">
+                        <div class="form-group">
+                            <label for="searchName">Search by Name</label>
+                            <input type="text" id="searchName" placeholder="Enter name...">
+                        </div>
+                        <div class="form-group">
+                            <label for="searchEmail">Search by Email</label>
+                            <input type="text" id="searchEmail" placeholder="Enter email...">
+                        </div>
+                        <button class="btn" onclick="searchProfiles()">Search</button>
+                        <div id="search-results"></div>
+                    </div>
+                </div>
+                
+                <div id="profile-response" class="response-area"></div>
+            </div>
+            
+            <!-- File Attachment Service -->
+            <div class="service-card">
+                <div class="service-header">
+                    <h2 class="service-title">📁 File Attachment Service</h2>
+                    <div id="file-status" class="status-indicator status-checking">Checking...</div>
+                </div>
+                
+                <div class="service-actions">
+                    <button class="btn" onclick="checkFileHealth()">Health Check</button>
+                    <button class="btn btn-secondary" onclick="loadAllFiles()">Load All</button>
+                    <button class="btn btn-success" onclick="createDemoFiles()">Demo Files</button>
+                </div>
+                
+                <div class="tabs">
+                    <button class="tab active" onclick="switchFileTab('upload')">Upload</button>
+                    <button class="tab" onclick="switchFileTab('list')">List</button>
+                    <button class="tab" onclick="switchFileTab('search')">Search</button>
+                </div>
+                
+                <div class="service-content">
+                    <!-- Upload File Tab -->
+                    <div id="file-upload" class="tab-content active">
+                        <div class="file-drop-zone" id="dropZone">
+                            <p>📤 Drop files here or click to select</p>
+                            <input type="file" id="fileInput" style="display: none;" multiple>
+                        </div>
+                        <form id="file-form">
+                            <div class="form-group">
+                                <label for="fileDescription">Description</label>
+                                <input type="text" id="fileDescription" name="description" placeholder="File description...">
+                            </div>
+                            <div class="form-group">
+                                <label for="fileTags">Tags (comma-separated)</label>
+                                <input type="text" id="fileTags" name="tags" placeholder="tag1, tag2, tag3">
+                            </div>
+                            <button type="submit" class="btn" disabled id="uploadBtn">Upload Selected</button>
+                        </form>
+                    </div>
+                    
+                    <!-- List Files Tab -->
+                    <div id="file-list-tab" class="tab-content">
+                        <div id="files-container">
+                            <p>Click "Load All" to fetch files</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Search Files Tab -->
+                    <div id="file-search" class="tab-content">
+                        <div class="form-group">
+                            <label for="searchFileName">Search by File Name</label>
+                            <input type="text" id="searchFileName" placeholder="Enter filename...">
+                        </div>
+                        <div class="form-group">
+                            <label for="searchContentType">Search by Content Type</label>
+                            <input type="text" id="searchContentType" placeholder="e.g., image/png">
+                        </div>
+                        <div class="form-group">
+                            <label for="searchTag">Search by Tag</label>
+                            <input type="text" id="searchTag" placeholder="Enter tag...">
+                        </div>
+                        <button class="btn" onclick="searchFiles()">Search</button>
+                        <div id="file-search-results"></div>
+                    </div>
+                </div>
+                
+                <div id="file-response" class="response-area"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Theme Management
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+        
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+        
+        // Tab Management
+        function switchProfileTab(tab) {
+            document.querySelectorAll('#profile-create, #profile-list, #profile-search').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.querySelectorAll('.service-card:first-child .tab').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            document.getElementById('profile-' + tab).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        function switchFileTab(tab) {
+            document.querySelectorAll('#file-upload, #file-list-tab, #file-search').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.querySelectorAll('.service-card:last-child .tab').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            document.getElementById('file-' + (tab === 'list' ? 'list-tab' : tab)).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        // API Helper
+        async function apiCall(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                const data = await response.json();
+                return { success: response.ok, data, status: response.status };
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+        
+        function displayResponse(elementId, response, isError = false) {
+            const element = document.getElementById(elementId);
+            element.className = `response-area ${isError ? 'response-error' : 'response-success'}`;
+            element.innerHTML = '<pre>' + JSON.stringify(response, null, 2) + '</pre>';
+        }
+        
+        // User Profile Service Functions
+        async function checkProfileHealth() {
+            const response = await apiCall('http://localhost:8085/profile/health');
+            if (response.success) {
+                document.getElementById('profile-status').className = 'status-indicator status-up';
+                document.getElementById('profile-status').textContent = 'UP';
+            } else {
+                document.getElementById('profile-status').className = 'status-indicator status-down';
+                document.getElementById('profile-status').textContent = 'DOWN';
+            }
+            displayResponse('profile-response', response, !response.success);
+        }
+        
+        async function loadAllProfiles() {
+            const response = await apiCall('http://localhost:8085/profile');
+            displayResponse('profile-response', response, !response.success);
+            
+            if (response.success) {
+                const container = document.getElementById('profiles-container');
+                if (response.data.length === 0) {
+                    container.innerHTML = '<p>No profiles found. Create some first!</p>';
+                } else {
+                    container.innerHTML = response.data.map(profile => `
+                        <div class="file-item">
+                            <div class="file-info">
+                                <div class="file-name">${profile.firstName} ${profile.lastName}</div>
+                                <div class="file-meta">${profile.email} | ID: ${profile.id}</div>
+                            </div>
+                            <div class="file-actions">
+                                <button class="btn btn-small btn-danger" onclick="deleteProfile(${profile.id})">Delete</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+        }
+        
+        async function createDemoProfile() {
+            const demoProfile = {
+                firstName: "John",
+                lastName: "Doe",
+                email: "john.doe@example.com",
+                phone: "+1-555-0123",
+                bio: "Demo user profile for testing microservices"
+            };
+            
+            const response = await apiCall('http://localhost:8085/profile', {
+                method: 'POST',
+                body: JSON.stringify(demoProfile)
+            });
+            
+            displayResponse('profile-response', response, !response.success);
+            if (response.success) {
+                loadAllProfiles();
+            }
+        }
+        
+        async function deleteProfile(id) {
+            const response = await apiCall(`http://localhost:8085/profile/${id}`, {
+                method: 'DELETE'
+            });
+            
+            displayResponse('profile-response', response, !response.success);
+            if (response.success) {
+                loadAllProfiles();
+            }
+        }
+        
+        async function searchProfiles() {
+            const name = document.getElementById('searchName').value;
+            const email = document.getElementById('searchEmail').value;
+            
+            const params = new URLSearchParams();
+            if (name) params.append('name', name);
+            if (email) params.append('email', email);
+            
+            const response = await apiCall(`http://localhost:8085/profile/search?${params}`);
+            displayResponse('profile-response', response, !response.success);
+            
+            const resultsContainer = document.getElementById('search-results');
+            if (response.success) {
+                resultsContainer.innerHTML = `<p>Found ${response.data.length} profiles</p>`;
+            }
+        }
+        
+        // File Attachment Service Functions
+        async function checkFileHealth() {
+            const response = await apiCall('http://localhost:8085/file/health');
+            if (response.success) {
+                document.getElementById('file-status').className = 'status-indicator status-up';
+                document.getElementById('file-status').textContent = 'UP';
+            } else {
+                document.getElementById('file-status').className = 'status-indicator status-down';
+                document.getElementById('file-status').textContent = 'DOWN';
+            }
+            displayResponse('file-response', response, !response.success);
+        }
+        
+        async function loadAllFiles() {
+            const response = await apiCall('http://localhost:8085/file');
+            displayResponse('file-response', response, !response.success);
+            
+            if (response.success) {
+                const container = document.getElementById('files-container');
+                if (response.data.length === 0) {
+                    container.innerHTML = '<p>No files found. Upload some first!</p>';
+                } else {
+                    container.innerHTML = response.data.map(file => `
+                        <div class="file-item">
+                            <div class="file-info">
+                                <div class="file-name">${file.fileName}</div>
+                                <div class="file-meta">${file.contentType} | ${(file.size / 1024).toFixed(2)} KB | ID: ${file.id}</div>
+                            </div>
+                            <div class="file-actions">
+                                <button class="btn btn-small btn-secondary" onclick="downloadFile(${file.id}, '${file.fileName}')">Download</button>
+                                <button class="btn btn-small btn-danger" onclick="deleteFile(${file.id})">Delete</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+        }
+        
+        async function createDemoFiles() {
+            const response = await apiCall('http://localhost:8085/file/demo-files', {
+                method: 'POST'
+            });
+            
+            displayResponse('file-response', response, !response.success);
+            if (response.success) {
+                loadAllFiles();
+            }
+        }
+        
+        async function deleteFile(id) {
+            const response = await apiCall(`http://localhost:8085/file/${id}`, {
+                method: 'DELETE'
+            });
+            
+            displayResponse('file-response', response, !response.success);
+            if (response.success) {
+                loadAllFiles();
+            }
+        }
+        
+        async function downloadFile(id, fileName) {
+            try {
+                const response = await fetch(`http://localhost:8085/file/${id}/download`);
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = fileName;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                } else {
+                    displayResponse('file-response', { error: 'Download failed' }, true);
+                }
+            } catch (error) {
+                displayResponse('file-response', { error: error.message }, true);
+            }
+        }
+        
+        async function searchFiles() {
+            const fileName = document.getElementById('searchFileName').value;
+            const contentType = document.getElementById('searchContentType').value;
+            const tag = document.getElementById('searchTag').value;
+            
+            const params = new URLSearchParams();
+            if (fileName) params.append('fileName', fileName);
+            if (contentType) params.append('contentType', contentType);
+            if (tag) params.append('tag', tag);
+            
+            const response = await apiCall(`http://localhost:8085/file/search?${params}`);
+            displayResponse('file-response', response, !response.success);
+            
+            const resultsContainer = document.getElementById('file-search-results');
+            if (response.success) {
+                resultsContainer.innerHTML = `<p>Found ${response.data.length} files</p>`;
+            }
+        }
+        
+        // File Upload Handling
+        function setupFileUpload() {
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            const uploadBtn = document.getElementById('uploadBtn');
+            
+            dropZone.addEventListener('click', () => fileInput.click());
+            
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+            
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('dragover');
+            });
+            
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                fileInput.files = e.dataTransfer.files;
+                updateUploadButton();
+            });
+            
+            fileInput.addEventListener('change', updateUploadButton);
+            
+            function updateUploadButton() {
+                uploadBtn.disabled = fileInput.files.length === 0;
+                uploadBtn.textContent = fileInput.files.length > 0 
+                    ? `Upload ${fileInput.files.length} file(s)` 
+                    : 'Upload Selected';
+            }
+        }
+        
+        // Form Handlers
+        document.getElementById('profile-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const profile = Object.fromEntries(formData);
+            
+            const response = await apiCall('http://localhost:8085/profile', {
+                method: 'POST',
+                body: JSON.stringify(profile)
+            });
+            
+            displayResponse('profile-response', response, !response.success);
+            if (response.success) {
+                e.target.reset();
+                loadAllProfiles();
+            }
+        });
+        
+        document.getElementById('file-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('fileInput');
+            const description = document.getElementById('fileDescription').value;
+            const tags = document.getElementById('fileTags').value;
+            
+            if (fileInput.files.length === 0) return;
+            
+            for (const file of fileInput.files) {
+                const formData = new FormData();
+                formData.append('file', file);
+                if (description) formData.append('description', description);
+                if (tags) formData.append('tags', tags);
+                
+                try {
+                    const response = await fetch('http://localhost:8085/file/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    displayResponse('file-response', { success: response.ok, data: result }, !response.ok);
+                } catch (error) {
+                    displayResponse('file-response', { error: error.message }, true);
+                }
+            }
+            
+            e.target.reset();
+            fileInput.value = '';
+            document.getElementById('uploadBtn').disabled = true;
+            loadAllFiles();
+        });
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTheme();
+            setupFileUpload();
+            
+            // Check service health on load
+            checkProfileHealth();
+            checkFileHealth();
+        });
+    </script>
+</body>
+</html>
