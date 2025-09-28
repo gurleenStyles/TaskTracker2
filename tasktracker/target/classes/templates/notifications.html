@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskTracker - Notifications</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #f5f5f5;
+            --bg-secondary: #ffffff;
+            --bg-accent: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --border-color: #000000;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+            --btn-primary: #ff6b6b;
+            --btn-secondary: #4ecdc4;
+            --card-bg: #ffffff;
+            --success-color: #2ed573;
+            --warning-color: #ffa502;
+            --danger-color: #ff4757;
+        }
+        
+        [data-theme="dark"] {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-accent: linear-gradient(135deg, #ff4757, #3742fa);
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --border-color: #ffffff;
+            --shadow-color: rgba(255, 255, 255, 0.2);
+            --btn-primary: #ff4757;
+            --btn-secondary: #3742fa;
+            --card-bg: #2c2c2c;
+            --success-color: #2ed573;
+            --warning-color: #ffa502;
+            --danger-color: #ff4757;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Space Grotesk', monospace;
+            background: var(--bg-primary);
+            min-height: 100vh;
+            color: var(--text-primary);
+        }
+        
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-accent);
+            opacity: 0.05;
+            z-index: -1;
+            animation: gradientShift 8s ease-in-out infinite alternate;
+        }
+        
+        @keyframes gradientShift {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(30deg); }
+        }
+        
+        .navbar {
+            background: var(--card-bg);
+            border: 3px solid var(--border-color);
+            padding: 1rem 2rem;
+            box-shadow: 8px 8px 0px var(--shadow-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 1rem;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .nav-controls {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .theme-toggle, .back-btn {
+            background: var(--btn-secondary);
+            border: 2px solid var(--border-color);
+            color: white;
+            padding: 0.7rem 1.2rem;
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            box-shadow: 4px 4px 0px var(--shadow-color);
+            transition: all 0.2s ease;
+            font-family: inherit;
+            text-decoration: none;
+        }
+        
+        .back-btn {
+            background: var(--btn-primary);
+        }
+        
+        .theme-toggle:hover, .back-btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px var(--shadow-color);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .page-header {
+            background: var(--card-bg);
+            border: 3px solid var(--border-color);
+            padding: 2rem;
+            box-shadow: 8px 8px 0px var(--shadow-color);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .page-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 1rem;
+        }
+        
+        .notification-filters {
+            background: var(--card-bg);
+            border: 3px solid var(--border-color);
+            padding: 1.5rem;
+            box-shadow: 6px 6px 0px var(--shadow-color);
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.7rem 1.2rem;
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+        
+        .filter-btn.active {
+            background: var(--btn-primary);
+            color: white;
+            transform: translate(-2px, -2px);
+            box-shadow: 4px 4px 0px var(--shadow-color);
+        }
+        
+        .filter-btn:hover {
+            background: var(--btn-secondary);
+            color: white;
+        }
+        
+        .notifications-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .notification-card {
+            background: var(--card-bg);
+            border: 3px solid var(--border-color);
+            padding: 1.5rem;
+            box-shadow: 6px 6px 0px var(--shadow-color);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .notification-card.overdue {
+            border-left: 8px solid var(--danger-color);
+        }
+        
+        .notification-card.due-today {
+            border-left: 8px solid var(--warning-color);
+        }
+        
+        .notification-card.reminder {
+            border-left: 8px solid var(--btn-secondary);
+        }
+        
+        .notification-card:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 8px 8px 0px var(--shadow-color);
+        }
+        
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        
+        .notification-icon {
+            font-size: 2rem;
+            margin-right: 1rem;
+        }
+        
+        .notification-content {
+            flex: 1;
+        }
+        
+        .notification-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+        
+        .notification-message {
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+        
+        .notification-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .notification-time {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        .notification-badge {
+            padding: 0.3rem 0.8rem;
+            border: 2px solid var(--border-color);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .badge-urgent {
+            background: var(--danger-color);
+            color: white;
+        }
+        
+        .badge-today {
+            background: var(--warning-color);
+            color: white;
+        }
+        
+        .badge-reminder {
+            background: var(--btn-secondary);
+            color: white;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: var(--card-bg);
+            border: 3px solid var(--border-color);
+            box-shadow: 8px 8px 0px var(--shadow-color);
+        }
+        
+        .empty-state h3 {
+            font-size: 2rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        
+        .empty-state p {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+        
+        .notification-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .action-btn {
+            background: transparent;
+            border: 2px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-family: inherit;
+            font-size: 0.8rem;
+            transition: all 0.2s ease;
+        }
+        
+        .action-btn:hover {
+            background: var(--btn-secondary);
+            color: white;
+        }
+        
+        .mark-done-btn:hover {
+            background: var(--success-color);
+        }
+        
+        .dismiss-btn:hover {
+            background: var(--text-secondary);
+        }
+        
+        @media (max-width: 768px) {
+            .navbar {
+                margin: 0.5rem;
+                padding: 1rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            .notification-filters {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .notification-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            
+            .notification-meta {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-gradient"></div>
+    
+    <nav class="navbar">
+        <div class="logo">Notifications</div>
+        <div class="nav-controls">
+            <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
+            <a href="/" class="back-btn">← Dashboard</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="page-header">
+            <h1>Notifications</h1>
+            <p>Stay on top of your deadlines and reminders</p>
+        </div>
+        
+        <div class="notification-filters">
+            <button class="filter-btn active" onclick="filterNotifications('all')">All</button>
+            <button class="filter-btn" onclick="filterNotifications('overdue')">Overdue</button>
+            <button class="filter-btn" onclick="filterNotifications('due-today')">Due Today</button>
+            <button class="filter-btn" onclick="filterNotifications('reminders')">Reminders</button>
+        </div>
+        
+        <div class="notifications-list" th:if="${!overdueTasks.isEmpty() or !dueTodayTasks.isEmpty()}">
+            <!-- Overdue Tasks -->
+            <div class="notification-card overdue" th:each="task : ${overdueTasks}">
+                <div class="notification-header">
+                    <div class="notification-content">
+                        <div class="notification-icon">🚨</div>
+                        <div class="notification-title" th:text="${task.title}">Overdue Task</div>
+                        <div class="notification-message">
+                            This task was due on <strong th:text="${#temporals.format(task.dueDate, 'MMM dd, yyyy')}">due date</strong> 
+                            and is now overdue. Please complete it as soon as possible.
+                        </div>
+                        <div class="notification-meta">
+                            <span class="notification-time" th:text="'Due: ' + ${#temporals.format(task.dueDate, 'MMM dd, yyyy')}">Due date</span>
+                            <span class="notification-badge badge-urgent">Urgent</span>
+                        </div>
+                        <div class="notification-actions">
+                            <button class="action-btn mark-done-btn" th:onclick="'markTaskDone(' + ${task.id} + ')'">Mark Done</button>
+                            <button class="action-btn" th:onclick="'viewTask(' + ${task.id} + ')'">View Task</button>
+                            <button class="action-btn dismiss-btn" th:onclick="'dismissNotification(this)'">Dismiss</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Due Today Tasks -->
+            <div class="notification-card due-today" th:each="task : ${dueTodayTasks}">
+                <div class="notification-header">
+                    <div class="notification-content">
+                        <div class="notification-icon">⏰</div>
+                        <div class="notification-title" th:text="${task.title}">Task Due Today</div>
+                        <div class="notification-message">
+                            This task is due today. Make sure to complete it before the deadline.
+                        </div>
+                        <div class="notification-meta">
+                            <span class="notification-time">Due Today</span>
+                            <span class="notification-badge badge-today">Today</span>
+                        </div>
+                        <div class="notification-actions">
+                            <button class="action-btn mark-done-btn" th:onclick="'markTaskDone(' + ${task.id} + ')'">Mark Done</button>
+                            <button class="action-btn" th:onclick="'viewTask(' + ${task.id} + ')'">View Task</button>
+                            <button class="action-btn dismiss-btn" th:onclick="'dismissNotification(this)'">Dismiss</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- General Reminders -->
+            <div class="notification-card reminder" th:if="${totalTasks > 0 and completedTasks < totalTasks}">
+                <div class="notification-header">
+                    <div class="notification-content">
+                        <div class="notification-icon">💡</div>
+                        <div class="notification-title">Daily Reminder</div>
+                        <div class="notification-message">
+                            You have <strong th:text="${pendingTasks}">X</strong> pending tasks remaining. 
+                            Great progress so far - keep it up!
+                        </div>
+                        <div class="notification-meta">
+                            <span class="notification-time">Daily Check-in</span>
+                            <span class="notification-badge badge-reminder">Reminder</span>
+                        </div>
+                        <div class="notification-actions">
+                            <button class="action-btn" onclick="window.location.href='/pages/tasks'">View Tasks</button>
+                            <button class="action-btn dismiss-btn" onclick="dismissNotification(this)">Dismiss</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Productivity Insight -->
+            <div class="notification-card reminder" th:if="${productivityRate >= 80}">
+                <div class="notification-header">
+                    <div class="notification-content">
+                        <div class="notification-icon">🎉</div>
+                        <div class="notification-title">Achievement Unlocked!</div>
+                        <div class="notification-message">
+                            Congratulations! You have a <strong th:text="${productivityRate} + '%'">80%</strong> completion rate. 
+                            You're absolutely crushing it!
+                        </div>
+                        <div class="notification-meta">
+                            <span class="notification-time">Achievement</span>
+                            <span class="notification-badge badge-reminder">Success</span>
+                        </div>
+                        <div class="notification-actions">
+                            <button class="action-btn" onclick="window.location.href='/analytics'">View Analytics</button>
+                            <button class="action-btn dismiss-btn" onclick="dismissNotification(this)">Dismiss</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Email Notification Test Section -->
+        <div class="notification-card reminder" style="margin-top: 2rem;">
+            <div class="notification-header">
+                <div class="notification-content">
+                    <div class="notification-icon">📧</div>
+                    <div class="notification-title">Email Notifications</div>
+                    <div class="notification-message">
+                        Test your email notification system and manage notification preferences.
+                    </div>
+                    <div class="notification-actions">
+                        <button class="action-btn" onclick="sendTestEmail()">Send Test Email</button>
+                        <button class="action-btn" onclick="sendOverdueAlert()">Test Overdue Alert</button>
+                        <button class="action-btn" onclick="sendWeeklySummary()">Test Weekly Summary</button>
+                    </div>
+                    <div id="emailStatus" style="margin-top: 1rem; font-weight: bold; color: var(--btn-secondary);"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="empty-state" th:if="${overdueTasks.isEmpty() and dueTodayTasks.isEmpty() and totalTasks == 0}">
+            <h3>No Notifications</h3>
+            <p>You're all caught up! No urgent tasks or reminders at the moment.</p>
+            <button class="filter-btn" onclick="window.location.href='/pages/tasks'">Create New Task</button>
+        </div>
+        
+        <div class="empty-state" th:if="${overdueTasks.isEmpty() and dueTodayTasks.isEmpty() and totalTasks > 0}">
+            <h3>All Clear!</h3>
+            <p>No overdue tasks or urgent reminders. You're staying on top of things!</p>
+            <button class="filter-btn" onclick="window.location.href='/pages/analytics'">View Analytics</button>
+        </div>
+    </div>
+    
+    <script>
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+        
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+        
+        function filterNotifications(type) {
+            // Update active filter button
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            const cards = document.querySelectorAll('.notification-card');
+            
+            cards.forEach(card => {
+                card.style.display = 'block';
+                
+                if (type === 'all') {
+                    card.style.display = 'block';
+                } else if (type === 'overdue' && !card.classList.contains('overdue')) {
+                    card.style.display = 'none';
+                } else if (type === 'due-today' && !card.classList.contains('due-today')) {
+                    card.style.display = 'none';
+                } else if (type === 'reminders' && !card.classList.contains('reminder')) {
+                    card.style.display = 'none';
+                }
+            });
+        }
+        
+        async function markTaskDone(taskId) {
+            try {
+                const response = await fetch(`/api/tasks/${taskId}/complete`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Error marking task as done. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error marking task as done. Please try again.');
+            }
+        }
+        
+        function viewTask(taskId) {
+            window.location.href = `/pages/tasks?id=${taskId}`;
+        }
+        
+        function dismissNotification(element) {
+            const card = element.closest('.notification-card');
+            card.style.transition = 'all 0.3s ease';
+            card.style.transform = 'translateX(100%)';
+            card.style.opacity = '0';
+            
+            setTimeout(() => {
+                card.remove();
+                
+                // Check if any notifications are left
+                const remainingCards = document.querySelectorAll('.notification-card');
+                if (remainingCards.length === 0) {
+                    location.reload();
+                }
+            }, 300);
+        }
+        
+        function animateNotifications() {
+            const cards = document.querySelectorAll('.notification-card');
+            
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(30px)';
+                
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        }
+        
+        // Email notification test functions
+        async function sendTestEmail() {
+            const statusDiv = document.getElementById('emailStatus');
+            statusDiv.textContent = 'Sending test email...';
+            
+            try {
+                const response = await fetch('/api/notifications/test', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.text();
+                statusDiv.textContent = result;
+                
+                if (response.ok) {
+                    statusDiv.style.color = 'var(--success-color, green)';
+                } else {
+                    statusDiv.style.color = 'var(--danger-color, red)';
+                }
+            } catch (error) {
+                statusDiv.textContent = 'Error: ' + error.message;
+                statusDiv.style.color = 'var(--danger-color, red)';
+            }
+        }
+        
+        async function sendOverdueAlert() {
+            const statusDiv = document.getElementById('emailStatus');
+            statusDiv.textContent = 'Sending overdue alerts...';
+            
+            try {
+                const response = await fetch('/api/notifications/overdue', {
+                    method: 'POST'
+                });
+                
+                const result = await response.text();
+                statusDiv.textContent = result;
+                statusDiv.style.color = response.ok ? 'var(--success-color, green)' : 'var(--danger-color, red)';
+            } catch (error) {
+                statusDiv.textContent = 'Error: ' + error.message;
+                statusDiv.style.color = 'var(--danger-color, red)';
+            }
+        }
+        
+        async function sendWeeklySummary() {
+            const statusDiv = document.getElementById('emailStatus');
+            statusDiv.textContent = 'Sending weekly summary...';
+            
+            try {
+                const response = await fetch('/api/notifications/weekly-summary', {
+                    method: 'POST'
+                });
+                
+                const result = await response.text();
+                statusDiv.textContent = result;
+                statusDiv.style.color = response.ok ? 'var(--success-color, green)' : 'var(--danger-color, red)';
+            } catch (error) {
+                statusDiv.textContent = 'Error: ' + error.message;
+                statusDiv.style.color = 'var(--danger-color, red)';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTheme();
+            animateNotifications();
+        });
+    </script>
+</body>
+</html>
