@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskTracker - Access Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Light Theme */
+            --bg-primary: #f5f5f5;
+            --bg-secondary: #ffffff;
+            --bg-accent: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --border-color: #000000;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+            --btn-primary: #ff6b6b;
+            --btn-secondary: #4ecdc4;
+            --card-bg: #ffffff;
+            --input-bg: #ffffff;
+            --error-color: #ff4757;
+            --success-color: #2ed573;
+        }
+        
+        [data-theme="dark"] {
+            /* Dark Theme */
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-accent: linear-gradient(135deg, #ff4757, #3742fa);
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --border-color: #ffffff;
+            --shadow-color: rgba(255, 255, 255, 0.2);
+            --btn-primary: #ff4757;
+            --btn-secondary: #3742fa;
+            --card-bg: #2c2c2c;
+            --input-bg: #1a1a1a;
+            --error-color: #ff6b6b;
+            --success-color: #5fdd00;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Space Grotesk', monospace;
+            background: var(--bg-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-accent);
+            opacity: 0.1;
+            z-index: -1;
+            animation: gradientPulse 6s ease-in-out infinite alternate;
+        }
+        
+        @keyframes gradientPulse {
+            0% { transform: scale(1) rotate(0deg); opacity: 0.1; }
+            100% { transform: scale(1.1) rotate(5deg); opacity: 0.2; }
+        }
+        
+        .floating-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .shape {
+            position: absolute;
+            border: 3px solid var(--border-color);
+            opacity: 0.1;
+            animation: float 8s ease-in-out infinite;
+        }
+        
+        .shape-1 {
+            width: 100px;
+            height: 100px;
+            background: var(--btn-primary);
+            top: 10%;
+            left: 5%;
+            animation-delay: 0s;
+        }
+        
+        .shape-2 {
+            width: 120px;
+            height: 120px;
+            background: var(--btn-secondary);
+            top: 70%;
+            right: 10%;
+            border-radius: 50%;
+            animation-delay: 3s;
+        }
+        
+        .shape-3 {
+            width: 80px;
+            height: 80px;
+            background: var(--btn-primary);
+            top: 50%;
+            left: 15%;
+            transform: rotate(45deg);
+            animation-delay: 6s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            33% { transform: translateY(-30px) rotate(120deg); }
+            66% { transform: translateY(15px) rotate(240deg); }
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: var(--btn-secondary);
+            border: 3px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.8rem;
+            cursor: pointer;
+            font-size: 1.5rem;
+            box-shadow: 6px 6px 0px var(--shadow-color);
+            transition: all 0.2s ease;
+            z-index: 1000;
+        }
+        
+        .theme-toggle:hover {
+            transform: translate(-3px, -3px);
+            box-shadow: 9px 9px 0px var(--shadow-color);
+        }
+        
+        .theme-toggle:active {
+            transform: translate(3px, 3px);
+            box-shadow: 3px 3px 0px var(--shadow-color);
+        }
+        
+        .auth-container {
+            background: var(--card-bg);
+            border: 4px solid var(--border-color);
+            box-shadow: 15px 15px 0px var(--shadow-color);
+            overflow: hidden;
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            min-height: 600px;
+            position: relative;
+            animation: slideInUp 0.8s ease-out;
+        }
+        
+        @keyframes slideInUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .auth-tabs {
+            background: var(--bg-secondary);
+            border-right: 4px solid var(--border-color);
+            flex: 1;
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .auth-tabs::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-accent);
+            opacity: 0.05;
+            animation: slideBackground 8s ease-in-out infinite alternate;
+        }
+        
+        @keyframes slideBackground {
+            0% { transform: translateX(-100px) translateY(-50px); }
+            100% { transform: translateX(100px) translateY(50px); }
+        }
+        
+        .auth-form {
+            flex: 1;
+            padding: 3rem;
+            background: var(--card-bg);
+            position: relative;
+        }
+        
+        .welcome-text {
+            margin-bottom: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .welcome-text h1 {
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            font-size: 3rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            line-height: 1;
+            animation: glitch 4s infinite;
+        }
+        
+        @keyframes glitch {
+            0%, 98% { transform: none; }
+            99% { transform: translate(3px, -2px); }
+            100% { transform: translate(-3px, 2px); }
+        }
+        
+        .welcome-text p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            font-size: 1.1rem;
+            font-weight: 400;
+        }
+        
+        .tab-buttons {
+            display: flex;
+            margin-bottom: 2rem;
+            gap: 0;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .tab-button {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            border: 3px solid var(--border-color);
+            background: var(--bg-secondary);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s ease;
+            color: var(--text-primary);
+            box-shadow: 4px 4px 0px var(--shadow-color);
+            font-family: inherit;
+        }
+        
+        .tab-button:first-child {
+            border-right: none;
+        }
+        
+        .tab-button:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px var(--shadow-color);
+        }
+        
+        .tab-button.active {
+            background: var(--btn-primary);
+            color: white;
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px var(--shadow-color);
+        }
+        
+        .form-container {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        .form-container.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .form-container h2 {
+            margin-bottom: 2rem;
+            color: var(--text-primary);
+            font-size: 2rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+        }
+        
+        input[type="text"], 
+        input[type="email"], 
+        input[type="password"] {
+            width: 100%;
+            padding: 1rem 1.2rem;
+            border: 3px solid var(--border-color);
+            background: var(--input-bg);
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            box-shadow: 4px 4px 0px var(--shadow-color);
+            font-family: inherit;
+        }
+        
+        input:focus {
+            outline: none;
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px var(--shadow-color);
+            border-color: var(--btn-secondary);
+        }
+        
+        input:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 5px 5px 0px var(--shadow-color);
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 1.2rem;
+            background: var(--btn-primary);
+            color: white;
+            border: 3px solid var(--border-color);
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 6px 6px 0px var(--shadow-color);
+            font-family: inherit;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.6s ease;
+        }
+        
+        .submit-btn:hover::before {
+            left: 100%;
+        }
+        
+        .submit-btn:hover {
+            transform: translate(-3px, -3px);
+            box-shadow: 9px 9px 0px var(--shadow-color);
+        }
+        
+        .submit-btn:active {
+            transform: translate(3px, 3px);
+            box-shadow: 3px 3px 0px var(--shadow-color);
+        }
+        
+        .submit-btn:disabled {
+            background: var(--text-secondary);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 6px 6px 0px var(--shadow-color);
+        }
+        
+        .error-message {
+            color: var(--error-color);
+            margin-top: 1rem;
+            padding: 1rem;
+            background: var(--card-bg);
+            border: 3px solid var(--error-color);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 4px 4px 0px var(--shadow-color);
+            display: none;
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        .success-message {
+            color: var(--success-color);
+            margin-top: 1rem;
+            padding: 1rem;
+            background: var(--card-bg);
+            border: 3px solid var(--success-color);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 4px 4px 0px var(--shadow-color);
+            display: none;
+            animation: bounce 0.6s ease-out;
+        }
+        
+        @keyframes bounce {
+            0% { transform: scale(0.8); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .logo-section {
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .logo-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            display: block;
+            animation: rotate 10s linear infinite;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .form-actions {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .secondary-btn {
+            background: var(--btn-secondary);
+            color: white;
+            border: 3px solid var(--border-color);
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 4px 4px 0px var(--shadow-color);
+            transition: all 0.2s ease;
+            font-family: inherit;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .secondary-btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px var(--shadow-color);
+        }
+        
+        .interactive-bg {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border: 2px solid var(--border-color);
+            opacity: 0.05;
+            animation: morphShape 12s ease-in-out infinite;
+        }
+        
+        .interactive-bg:nth-child(1) {
+            top: -50px;
+            right: -50px;
+            background: var(--btn-primary);
+            animation-delay: 0s;
+        }
+        
+        .interactive-bg:nth-child(2) {
+            bottom: -50px;
+            left: -50px;
+            background: var(--btn-secondary);
+            border-radius: 50%;
+            animation-delay: 4s;
+        }
+        
+        @keyframes morphShape {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            33% { transform: rotate(120deg) scale(1.2); }
+            66% { transform: rotate(240deg) scale(0.8); }
+        }
+        
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .auth-container {
+                flex-direction: column;
+                margin: 1rem;
+                max-width: none;
+                min-height: auto;
+            }
+            
+            .auth-tabs, .auth-form {
+                padding: 2rem 1.5rem;
+            }
+            
+            .auth-tabs {
+                border-right: none;
+                border-bottom: 4px solid var(--border-color);
+            }
+            
+            .welcome-text h1 {
+                font-size: 2.5rem;
+            }
+            
+            .tab-buttons {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .tab-button:first-child {
+                border-right: 3px solid var(--border-color);
+            }
+            
+            .theme-toggle {
+                top: 1rem;
+                right: 1rem;
+                padding: 0.6rem;
+                font-size: 1.2rem;
+            }
+        }
+        
+        /* Accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        
+        /* Focus styles */
+        .theme-toggle:focus,
+        .tab-button:focus,
+        .submit-btn:focus,
+        input:focus {
+            outline: 3px solid var(--btn-secondary);
+            outline-offset: 2px;
+        }
+        
+        .pulse-effect {
+            animation: pulse 0.3s ease-in-out;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-gradient"></div>
+    
+    <div class="floating-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+    
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark/light theme">
+        🌓
+    </button>
+    
+    <div class="auth-container">
+        <div class="interactive-bg"></div>
+        <div class="interactive-bg"></div>
+        
+        <div class="auth-tabs">
+            <div class="logo-section">
+                <span class="logo-icon">⚡</span>
+            </div>
+            
+            <div class="welcome-text">
+                <h1>TaskTracker</h1>
+                <p>Brutally simple task management. No fluff, just results. Join the productivity revolution.</p>
+            </div>
+            
+            <div class="tab-buttons">
+                <button class="tab-button active" onclick="switchTab('login')">Login</button>
+                <button class="tab-button" onclick="switchTab('register')">Register</button>
+            </div>
+        </div>
+        
+        <div class="auth-form">
+            <!-- Login Form -->
+            <div id="loginForm" class="form-container active">
+                <h2>Access Portal</h2>
+                <form onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="loginUsername">Username</label>
+                        <input type="text" id="loginUsername" name="username" required autocomplete="username">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" name="password" required autocomplete="current-password">
+                    </div>
+                    
+                    <button type="submit" class="submit-btn" id="loginBtn">
+                        <span>Enter System</span>
+                        <div class="loading-spinner"></div>
+                    </button>
+                    <div id="loginError" class="error-message"></div>
+                    <div id="loginSuccess" class="success-message"></div>
+                </form>
+                
+                <div class="form-actions">
+                    <a href="#" class="secondary-btn" onclick="showDemo()">Demo Mode</a>
+                </div>
+            </div>
+            
+            <!-- Register Form -->
+            <div id="registerForm" class="form-container">
+                <h2>Create Account</h2>
+                <form onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label for="registerUsername">Username</label>
+                        <input type="text" id="registerUsername" name="username" required minlength="3" maxlength="30" autocomplete="username">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="registerEmail">Email</label>
+                        <input type="email" id="registerEmail" name="email" required autocomplete="email">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="registerPassword">Password</label>
+                        <input type="password" id="registerPassword" name="password" required minlength="6" autocomplete="new-password">
+                    </div>
+                    
+                    <button type="submit" class="submit-btn" id="registerBtn">
+                        <span>Join Revolution</span>
+                        <div class="loading-spinner"></div>
+                    </button>
+                    <div id="registerError" class="error-message"></div>
+                    <div id="registerSuccess" class="success-message"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Theme Management
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            // Add rotation animation to theme toggle
+            const toggleBtn = document.querySelector('.theme-toggle');
+            toggleBtn.style.transform = 'rotate(360deg)';
+            setTimeout(() => {
+                toggleBtn.style.transform = 'none';
+            }, 300);
+            
+            // Add pulse effect to container
+            document.querySelector('.auth-container').classList.add('pulse-effect');
+            setTimeout(() => {
+                document.querySelector('.auth-container').classList.remove('pulse-effect');
+            }, 300);
+        }
+        
+        // Initialize theme from localStorage
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+        
+        function switchTab(tab) {
+            // Hide all forms
+            document.querySelectorAll('.form-container').forEach(form => {
+                form.classList.remove('active');
+            });
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected form and activate button
+            if (tab === 'login') {
+                document.getElementById('loginForm').classList.add('active');
+                document.querySelectorAll('.tab-button')[0].classList.add('active');
+            } else {
+                document.getElementById('registerForm').classList.add('active');
+                document.querySelectorAll('.tab-button')[1].classList.add('active');
+            }
+            
+            // Clear any previous messages
+            clearMessages();
+            
+            // Add switch animation
+            const activeForm = document.querySelector('.form-container.active');
+            activeForm.style.animation = 'none';
+            setTimeout(() => {
+                activeForm.style.animation = 'fadeIn 0.5s ease-in';
+            }, 10);
+        }
+        
+        function clearMessages() {
+            document.querySelectorAll('.error-message, .success-message').forEach(msg => {
+                msg.style.display = 'none';
+                msg.textContent = '';
+            });
+        }
+        
+        function showError(elementId, message) {
+            const errorEl = document.getElementById(elementId);
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+            errorEl.style.animation = 'shake 0.5s ease-in-out';
+        }
+        
+        function showSuccess(elementId, message) {
+            const successEl = document.getElementById(elementId);
+            successEl.textContent = message;
+            successEl.style.display = 'block';
+            successEl.style.animation = 'bounce 0.6s ease-out';
+        }
+        
+        function showLoading(buttonId, show) {
+            const btn = document.getElementById(buttonId);
+            const spinner = btn.querySelector('.loading-spinner');
+            const text = btn.querySelector('span');
+            
+            if (show) {
+                btn.disabled = true;
+                spinner.style.display = 'inline-block';
+                text.textContent = 'Processing...';
+            } else {
+                btn.disabled = false;
+                spinner.style.display = 'none';
+                text.textContent = buttonId === 'loginBtn' ? 'Enter System' : 'Join Revolution';
+            }
+        }
+        
+        async function handleLogin(event) {
+            event.preventDefault();
+            clearMessages();
+            showLoading('loginBtn', true);
+            
+            const formData = new FormData(event.target);
+            const loginData = {
+                username: formData.get('username'),
+                password: formData.get('password')
+            };
+            
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams(loginData)
+                });
+                
+                if (response.ok) {
+                    showSuccess('loginSuccess', 'Access Granted! Redirecting to command center...');
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1500);
+                } else {
+                    showError('loginError', 'Access Denied! Check your credentials and try again.');
+                }
+            } catch (error) {
+                showError('loginError', 'System Error! Connection failed. Try again later.');
+                console.error('Login error:', error);
+            } finally {
+                showLoading('loginBtn', false);
+            }
+        }
+        
+        async function handleRegister(event) {
+            event.preventDefault();
+            clearMessages();
+            showLoading('registerBtn', true);
+            
+            const formData = new FormData(event.target);
+            const registerData = {
+                username: formData.get('username'),
+                email: formData.get('email'),
+                password: formData.get('password')
+            };
+            
+            try {
+                const response = await fetch('/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(registerData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showSuccess('registerSuccess', 'Account Created! Welcome to the revolution. Please login.');
+                    // Clear the form
+                    event.target.reset();
+                    // Switch to login tab after a delay
+                    setTimeout(() => {
+                        switchTab('login');
+                    }, 2000);
+                } else {
+                    showError('registerError', result.message || 'Registration Failed! Try different credentials.');
+                }
+            } catch (error) {
+                showError('registerError', 'System Error! Registration failed. Try again later.');
+                console.error('Registration error:', error);
+            } finally {
+                showLoading('registerBtn', false);
+            }
+        }
+        
+        function showDemo() {
+            // Fill in demo credentials
+            document.getElementById('loginUsername').value = 'demo';
+            document.getElementById('loginPassword').value = 'demo123';
+            
+            // Switch to login tab if not already there
+            switchTab('login');
+            
+            // Add visual feedback
+            const inputs = document.querySelectorAll('#loginForm input');
+            inputs.forEach((input, index) => {
+                setTimeout(() => {
+                    input.style.animation = 'pulse 0.3s ease-in-out';
+                }, index * 100);
+            });
+        }
+        
+        // Interactive background effect
+        function createInteractiveBackground() {
+            let mouseX = 0, mouseY = 0;
+            
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                const shapes = document.querySelectorAll('.shape');
+                shapes.forEach((shape, index) => {
+                    const speed = (index + 1) * 0.03;
+                    const x = (mouseX - window.innerWidth / 2) * speed;
+                    const y = (mouseY - window.innerHeight / 2) * speed;
+                    
+                    shape.style.transform = `translate(${x}px, ${y}px)`;
+                });
+                
+                // Interactive background elements
+                const bgElements = document.querySelectorAll('.interactive-bg');
+                bgElements.forEach((el, index) => {
+                    const speed = (index + 1) * 0.02;
+                    const x = (mouseX - window.innerWidth / 2) * speed;
+                    const y = (mouseY - window.innerHeight / 2) * speed;
+                    
+                    el.style.transform = `translate(${x}px, ${y}px) rotate(${x * 0.1}deg)`;
+                });
+            });
+        }
+        
+        // Add ripple effect to buttons
+        function addRippleEffect() {
+            const buttons = document.querySelectorAll('.submit-btn, .tab-button, .secondary-btn, .theme-toggle');
+            
+            buttons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    const ripple = document.createElement('span');
+                    const rect = this.getBoundingClientRect();
+                    const size = Math.max(rect.width, rect.height);
+                    const x = e.clientX - rect.left - size / 2;
+                    const y = e.clientY - rect.top - size / 2;
+                    
+                    ripple.style.cssText = `
+                        position: absolute;
+                        width: ${size}px;
+                        height: ${size}px;
+                        background: rgba(255, 255, 255, 0.3);
+                        border-radius: 50%;
+                        left: ${x}px;
+                        top: ${y}px;
+                        transform: scale(0);
+                        animation: ripple 0.6s ease-out;
+                        pointer-events: none;
+                    `;
+                    
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        @keyframes ripple {
+                            to {
+                                transform: scale(2);
+                                opacity: 0;
+                            }
+                        }
+                    `;
+                    document.head.appendChild(style);
+                    
+                    this.style.position = 'relative';
+                    this.style.overflow = 'hidden';
+                    this.appendChild(ripple);
+                    
+                    setTimeout(() => {
+                        ripple.remove();
+                        style.remove();
+                    }, 600);
+                });
+            });
+        }
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Alt + L for Login tab
+            if (e.altKey && e.key === 'l') {
+                e.preventDefault();
+                switchTab('login');
+            }
+            // Alt + R for Register tab
+            if (e.altKey && e.key === 'r') {
+                e.preventDefault();
+                switchTab('register');
+            }
+            // Alt + D for Demo
+            if (e.altKey && e.key === 'd') {
+                e.preventDefault();
+                showDemo();
+            }
+        });
+        
+        // Initialize everything when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTheme();
+            createInteractiveBackground();
+            addRippleEffect();
+            
+            // Add entrance animation
+            setTimeout(() => {
+                document.querySelector('.auth-container').style.animation = 'slideInUp 0.8s ease-out';
+            }, 100);
+            
+            // Console easter egg
+            console.log(`
+╔══════════════════════════════════════╗
+║      🔐 TASKTRACKER ACCESS 🔐        ║
+║                                      ║
+║  Neo-Brutalist Authentication UI    ║
+║  Theme: ${localStorage.getItem('theme') || 'light'}                          ║
+║                                      ║
+║  Shortcuts:                          ║
+║  Alt + L = Login tab                 ║
+║  Alt + R = Register tab              ║
+║  Alt + D = Demo mode                 ║
+╚══════════════════════════════════════╝
+            `);
+        });
+    </script>
+</body>
+</html>

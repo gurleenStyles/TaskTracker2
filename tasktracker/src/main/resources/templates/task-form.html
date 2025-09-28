@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskTracker - Create Task</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #f5f5f5;
+            --bg-secondary: #ffffff;
+            --bg-accent: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --border-color: #000000;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+            --btn-primary: #ff6b6b;
+            --btn-secondary: #4ecdc4;
+            --card-bg: #ffffff;
+        }
+        
+        [data-theme="dark"] {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-accent: linear-gradient(135deg, #ff4757, #3742fa);
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --border-color: #ffffff;
+            --shadow-color: rgba(255, 255, 255, 0.2);
+            --btn-primary: #ff4757;
+            --btn-secondary: #3742fa;
+            --card-bg: #2c2c2c;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Space Grotesk', monospace;
+            background: var(--bg-primary);
+            min-height: 100vh;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+        
+        .navbar {
+            background: var(--card-bg);
+            border: 3px solid var(--border-color);
+            padding: 1rem 2rem;
+            box-shadow: 8px 8px 0px var(--shadow-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 1rem;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .nav-controls {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .theme-toggle, .back-btn {
+            background: var(--btn-secondary);
+            border: 2px solid var(--border-color);
+            color: white;
+            padding: 0.7rem 1.2rem;
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            box-shadow: 4px 4px 0px var(--shadow-color);
+            transition: all 0.2s ease;
+            font-family: inherit;
+            text-decoration: none;
+        }
+        
+        .back-btn {
+            background: var(--btn-primary);
+        }
+        
+        .theme-toggle:hover, .back-btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px var(--shadow-color);
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .form-card {
+            background: var(--card-bg);
+            border: 4px solid var(--border-color);
+            padding: 3rem;
+            box-shadow: 12px 12px 0px var(--shadow-color);
+            animation: slideInUp 0.8s ease-out;
+        }
+        
+        .form-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .form-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+        }
+        
+        input[type="text"], 
+        input[type="date"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 1rem 1.2rem;
+            border: 3px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            box-shadow: 4px 4px 0px var(--shadow-color);
+            font-family: inherit;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px var(--shadow-color);
+            border-color: var(--btn-secondary);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 1.2rem;
+            background: var(--btn-primary);
+            color: white;
+            border: 3px solid var(--border-color);
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 6px 6px 0px var(--shadow-color);
+            font-family: inherit;
+            margin-top: 1rem;
+        }
+        
+        .submit-btn:hover {
+            transform: translate(-3px, -3px);
+            box-shadow: 9px 9px 0px var(--shadow-color);
+        }
+        
+        .submit-btn:active {
+            transform: translate(3px, 3px);
+            box-shadow: 3px 3px 0px var(--shadow-color);
+        }
+        
+        @keyframes slideInUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        @media (max-width: 768px) {
+            .navbar {
+                margin: 0.5rem;
+                padding: 1rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            .form-card {
+                padding: 2rem 1.5rem;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">Create Task</div>
+        <div class="nav-controls">
+            <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
+            <a href="/pages/tasks" class="back-btn">← Back</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="form-card">
+            <div class="form-header">
+                <h1>New Task</h1>
+                <p>Create a new task to boost your productivity</p>
+            </div>
+            
+            <form onsubmit="handleSubmit(event)">
+                <div class="form-group">
+                    <label for="title">Task Title</label>
+                    <input type="text" id="title" name="title" required maxlength="100">
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" placeholder="Describe your task..."></textarea>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="priority">Priority</label>
+                        <select id="priority" name="priority">
+                            <option value="">Select Priority</option>
+                            <option th:each="priority : ${priorities}" th:value="${priority}" th:text="${priority}">Priority</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="status">Status</label>
+                        <select id="status" name="status">
+                            <option value="">Select Status</option>
+                            <option th:each="status : ${statuses}" th:value="${status}" th:text="${status}">Status</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="dueDate">Due Date</label>
+                        <input type="date" id="dueDate" name="dueDate">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select id="category" name="categoryId">
+                            <option value="">Select Category</option>
+                            <option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.name}">Category</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button type="submit" class="submit-btn">Create Task</button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        let isEditMode = false;
+        let editTaskId = null;
+        
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+        
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+        
+        function checkEditMode() {
+            // Check if we have edit task data in localStorage
+            const editTaskData = localStorage.getItem('editTaskData');
+            if (editTaskData) {
+                isEditMode = true;
+                const taskData = JSON.parse(editTaskData);
+                editTaskId = taskData.id;
+                
+                // Update UI for edit mode
+                document.querySelector('.logo').textContent = 'Edit Task';
+                document.querySelector('.form-header h1').textContent = 'Edit Task';
+                document.querySelector('.form-header p').textContent = 'Update your task details';
+                document.querySelector('.submit-btn').textContent = 'Update Task';
+                
+                // Pre-fill form fields
+                document.getElementById('title').value = taskData.title || '';
+                document.getElementById('description').value = taskData.description || '';
+                document.getElementById('priority').value = taskData.priority || '';
+                document.getElementById('status').value = taskData.status || '';
+                document.getElementById('dueDate').value = taskData.dueDate || '';
+                if (taskData.category && taskData.category.id) {
+                    document.getElementById('category').value = taskData.category.id;
+                }
+                
+                // Clear the localStorage data
+                localStorage.removeItem('editTaskData');
+            }
+        }
+        
+        async function handleSubmit(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const taskData = {
+                title: formData.get('title'),
+                description: formData.get('description'),
+                priority: formData.get('priority') || null,
+                status: formData.get('status') || null,
+                dueDate: formData.get('dueDate') || null,
+                categoryId: formData.get('categoryId') ? parseInt(formData.get('categoryId')) : null
+            };
+            
+            try {
+                let response;
+                if (isEditMode && editTaskId) {
+                    // Update existing task
+                    response = await fetch(`/tasks/${editTaskId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(taskData)
+                    });
+                } else {
+                    // Create new task
+                    response = await fetch('/tasks', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(taskData)
+                    });
+                }
+                
+                if (response.ok) {
+                    if (isEditMode) {
+                        alert('Task updated successfully!');
+                    } else {
+                        alert('Task created successfully!');
+                    }
+                    window.location.href = '/pages/tasks';  // Redirect to tasks page
+                } else {
+                    if (isEditMode) {
+                        alert('Failed to update task');
+                    } else {
+                        alert('Failed to create task');
+                    }
+                }
+            } catch (error) {
+                if (isEditMode) {
+                    alert('Error updating task');
+                } else {
+                    alert('Error creating task');
+                }
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTheme();
+            checkEditMode();
+        });
+    </script>
+</body>
+</html>

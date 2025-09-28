@@ -1,0 +1,340 @@
+# TaskTracker Application - Complete Project Flow Documentation
+
+## 📋 Project Overview
+TaskTracker is a full-stack web application built with Spring Boot, Thymeleaf, and MySQL that provides task management functionality with a modern neo-brutalist design system.
+
+## 🏗️ Application Architecture
+
+### Backend Stack:
+- **Spring Boot 3.5.5** - Main framework for REST API and web application
+- **Spring Security** - Authentication and authorization
+- **Spring Data JPA** - Database operations and repository pattern
+- **Hibernate** - ORM for database mapping
+- **MySQL 8.0** - Primary database for data persistence
+- **Thymeleaf** - Server-side template engine for dynamic HTML rendering
+
+### Frontend Stack:
+- **HTML5** - Semantic markup structure
+- **CSS3** - Neo-brutalist design system with custom properties
+- **JavaScript (Vanilla)** - Client-side interactivity and API calls
+- **Space Grotesk Font** - Typography for modern appearance
+- **Responsive Design** - Mobile-first approach with CSS Grid/Flexbox
+
+## 🔐 Authentication & Security Flow
+
+### 1. Login Process
+**Frontend:** `login.html` → **Backend:** `LoginController.java` → **Security:** `SecurityConfig.java`
+
+**Flow:**
+1. User accesses application → Redirected to `/login` (unauthorized users)
+2. `login.html` renders with neo-brutalist login form
+3. Form submission → `LoginController.java` processes credentials
+4. `SecurityConfig.java` validates against database using `AppUserRepository`
+5. Successful login → Redirect to home dashboard `/`
+
+**Key Files:**
+- **login.html** - Neo-brutalist login form with theme toggle
+- **LoginController.java** - Handles GET /login and authentication flow
+- **SecurityConfig.java** - Spring Security configuration, password encoding, route protection
+- **AppUserRepository.java** - Database operations for user authentication
+
+### 2. Registration Process
+**Frontend:** `login.html` (register form) → **Backend:** `AuthController.java`
+
+**Flow:**
+1. User clicks "Register" on login page
+2. Registration form appears in modal
+3. Form submission → `AuthController.java` `/api/auth/register`
+4. Password encryption and user creation in database
+5. Auto-login after successful registration
+
+**Key Files:**
+- **AuthController.java** - REST API for user registration and management
+- **AppUser.java** - User entity model with roles and validation
+- **DotenvConfig.java** - Environment configuration for database credentials
+
+## 🏠 Dashboard & Navigation Flow
+
+### 3. Home Dashboard
+**Frontend:** `home.html` → **Backend:** `HomeController.java`
+
+**Flow:**
+1. Authenticated user lands on dashboard
+2. `HomeController.java` provides username and welcome message
+3. `home.html` renders with quick action buttons and feature cards
+4. Navigation links connect to all application features
+
+**Key Files:**
+- **home.html** - Main dashboard with neo-brutalist design, navigation cards
+- **HomeController.java** - Simple controller providing user context to home page
+- **CSS Variables** - Theming system for dark/light mode consistency
+
+### 4. Feature Navigation
+**Navigation Routes:**
+- Dashboard Quick Buttons → Direct page access
+- Feature Cards → Interactive navigation with hover effects
+- Back Buttons → Return to dashboard from any page
+
+## 📝 Task Management Flow
+
+### 5. Task Listing & Management
+**Frontend:** `tasks.html` → **Backend:** `TaskPageController.java` + `TaskController.java` (API)
+
+**Flow:**
+1. User clicks "My Tasks" from dashboard
+2. Route: `/pages/tasks` → `TaskPageController.tasksPage()`
+3. Controller fetches user's tasks from `TaskRepository`
+4. `tasks.html` renders with filtering, CRUD operations
+5. JavaScript makes API calls to `TaskController` for operations
+
+**Key Files:**
+- **tasks.html** - Task listing page with filters, CRUD buttons, responsive design
+- **TaskPageController.java** - Page controller for rendering templates with data
+- **TaskController.java** - REST API controller for task CRUD operations
+- **TaskRepository.java** - JPA repository for database task operations
+- **Task.java** - Task entity model with all properties and relationships
+
+### 6. Task Creation
+**Frontend:** `task-form.html` → **Backend:** `TaskPageController.java` + `TaskController.java` (API)
+
+**Flow:**
+1. User clicks "Create Task" or "+" button
+2. Route: `/pages/tasks/new` → `TaskPageController.newTaskPage()`
+3. Controller provides categories, priorities, statuses for dropdowns
+4. `task-form.html` renders creation form
+5. Form submission → JavaScript API call to `TaskController.create()`
+
+**Key Files:**
+- **task-form.html** - Task creation form with validation and dropdowns
+- **Priority.java** - Enum for task priority levels (LOW, MEDIUM, HIGH)
+- **Status.java** - Enum for task status (PENDING, IN_PROGRESS, DONE)
+- **Category.java** - Category entity for task organization
+
+## 📊 Analytics & Insights Flow
+
+### 7. Productivity Analytics
+**Frontend:** `analytics.html` → **Backend:** `TaskPageController.java`
+
+**Flow:**
+1. User clicks "Analytics" from dashboard
+2. Route: `/pages/analytics` → `TaskPageController.analyticsPage()`
+3. Controller calculates statistics from user's tasks
+4. `analytics.html` renders with animated progress bars and insights
+
+**Key Features:**
+- **Real-time calculations** - Total, completed, pending tasks
+- **Productivity rate** - Percentage completion with progress bars
+- **Animated statistics** - JavaScript animations for engagement
+- **Performance insights** - Personalized messages based on productivity
+
+## 🏷️ Category Management Flow
+
+### 8. Category Organization
+**Frontend:** `categories.html` → **Backend:** `TaskPageController.java` + `CategoryController.java` (API)
+
+**Flow:**
+1. User clicks "Categories" from dashboard
+2. Route: `/pages/categories` → `TaskPageController.categoriesPage()`
+3. Controller fetches all categories with task counts
+4. `categories.html` renders with CRUD modals
+5. JavaScript API calls to `CategoryController` for operations
+
+**Key Files:**
+- **categories.html** - Category management with modals, statistics
+- **CategoryController.java** - REST API for category CRUD operations
+- **CategoryRepository.java** - JPA repository for category database operations
+
+## 🔔 Notification System Flow
+
+### 9. Smart Notifications
+**Frontend:** `notifications.html` → **Backend:** `TaskPageController.java`
+
+**Flow:**
+1. User clicks "Notifications" from dashboard
+2. Route: `/pages/notifications` → `TaskPageController.notificationsPage()`
+3. Controller analyzes tasks for overdue, due today, achievements
+4. `notifications.html` renders with filtering and interactive cards
+
+**Key Features:**
+- **Smart filtering** - Overdue, due today, reminders, achievements
+- **Action buttons** - Mark done, view task, dismiss notifications
+- **Real-time insights** - Productivity achievements and warnings
+
+## 🔄 Data Flow & Entity Relationships
+
+### 10. Database Schema & Relationships
+```
+AppUser (users table)
+├── id (Primary Key)
+├── username (Unique)
+├── email (Unique)
+├── password (Encrypted)
+├── role (USER/ADMIN)
+└── tasks (One-to-Many relationship)
+
+Task (tasks table)
+├── id (Primary Key)
+├── title
+├── description
+├── priority (LOW/MEDIUM/HIGH)
+├── status (PENDING/IN_PROGRESS/DONE)
+├── dueDate
+├── createdDate
+├── owner (Foreign Key to AppUser)
+└── category (Foreign Key to Category)
+
+Category (categories table)
+├── id (Primary Key)
+├── name
+├── description
+└── tasks (One-to-Many relationship)
+```
+
+## 📁 File Structure & Purpose
+
+### Backend Java Files:
+
+#### **Main Application:**
+- **TasktrackerApplication.java** - Spring Boot main class, application entry point
+
+#### **Configuration:**
+- **SecurityConfig.java** - Spring Security setup, authentication, route protection
+- **DotenvConfig.java** - Environment variables configuration for database credentials
+
+#### **Model/Entity Layer:**
+- **AppUser.java** - User entity with authentication fields and task relationships
+- **Task.java** - Core task entity with all properties, validations, relationships
+- **Category.java** - Category entity for task organization
+- **Priority.java** - Enum defining task priority levels
+- **Status.java** - Enum defining task completion states
+- **Role.java** - Enum for user roles (USER, ADMIN)
+
+#### **Repository Layer (Data Access):**
+- **AppUserRepository.java** - JPA repository for user database operations
+- **TaskRepository.java** - JPA repository for task CRUD and queries
+- **CategoryRepository.java** - JPA repository for category management
+
+#### **Service Layer:**
+- **NotificationService.java** - Business logic for notification generation
+
+#### **Controller Layer (Web & API):**
+- **HomeController.java** - Renders dashboard page with user context
+- **LoginController.java** - Handles login page rendering and authentication
+- **AuthController.java** - REST API for user registration and authentication
+- **TaskController.java** - REST API for task CRUD operations (JSON responses)
+- **TaskPageController.java** - Page controller for rendering HTML templates with data
+- **CategoryController.java** - REST API for category management
+
+### Frontend Template Files:
+
+#### **Authentication Templates:**
+- **login.html** - Neo-brutalist login/register page with theme toggle
+  - Connected to: LoginController.java, AuthController.java
+  - Purpose: User authentication entry point
+
+#### **Main Application Templates:**
+- **home.html** - Dashboard with navigation and feature overview
+  - Connected to: HomeController.java
+  - Purpose: Central navigation hub, application overview
+
+- **tasks.html** - Task listing and management page
+  - Connected to: TaskPageController.java (data), TaskController.java (API)
+  - Purpose: Main task management interface with filtering and CRUD
+
+- **task-form.html** - Task creation and editing form
+  - Connected to: TaskPageController.java (data), TaskController.java (API)
+  - Purpose: Task creation/editing with validation and dropdowns
+
+- **analytics.html** - Productivity dashboard with statistics
+  - Connected to: TaskPageController.java
+  - Purpose: Data visualization and productivity insights
+
+- **categories.html** - Category management interface
+  - Connected to: TaskPageController.java (data), CategoryController.java (API)
+  - Purpose: Task organization and category CRUD operations
+
+- **notifications.html** - Smart notification center
+  - Connected to: TaskPageController.java
+  - Purpose: Deadline alerts, reminders, and achievement notifications
+
+## 🚀 Application Flow Summary
+
+### Complete User Journey:
+1. **Login/Register** → Authentication → Database validation
+2. **Dashboard** → Navigation hub → Feature access
+3. **Task Management** → Create/Edit/Delete → Database persistence
+4. **Category Organization** → Group tasks → Improved workflow
+5. **Analytics Viewing** → Progress tracking → Productivity insights
+6. **Notification Monitoring** → Deadline management → Task completion
+
+### Frontend-Backend Connections:
+
+#### **Page Controllers (HTML Rendering):**
+- `TaskPageController.java` ↔ `tasks.html`, `task-form.html`, `analytics.html`, `categories.html`, `notifications.html`
+- `HomeController.java` ↔ `home.html`
+- `LoginController.java` ↔ `login.html`
+
+#### **API Controllers (JSON Data):**
+- `TaskController.java` ↔ JavaScript in `tasks.html`, `task-form.html`, `notifications.html`
+- `CategoryController.java` ↔ JavaScript in `categories.html`
+- `AuthController.java` ↔ JavaScript in `login.html`
+
+#### **Data Flow:**
+```
+Frontend Templates → Page Controllers → Service Layer → Repository Layer → MySQL Database
+                  ↑                                                                    ↓
+            JavaScript API Calls ← REST Controllers ← Business Logic ← JPA Queries
+```
+
+## 🎨 Design System Implementation
+
+### **Neo-Brutalist Theme:**
+- **CSS Custom Properties** - Consistent theming across all pages
+- **Space Grotesk Font** - Modern, tech-focused typography
+- **Bold Borders (3px)** - Sharp, defined element boundaries
+- **Deep Shadows (8px+)** - Layered visual depth
+- **Hover Animations** - Interactive transform effects
+- **Theme Toggle** - Light/dark mode with localStorage persistence
+
+### **Responsive Design:**
+- **Mobile-first approach** - Optimized for all screen sizes
+- **CSS Grid/Flexbox** - Modern layout techniques
+- **Consistent spacing** - Unified design language
+- **Accessibility** - Proper contrast ratios and focus states
+
+## 🔧 Technical Features
+
+### **Security Features:**
+- **Password encryption** using BCrypt
+- **Session management** with Spring Security
+- **Route protection** - Authenticated access only
+- **CSRF protection** - Form security
+
+### **Database Features:**
+- **JPA relationships** - Proper foreign key constraints
+- **Data validation** - Entity-level validation annotations
+- **Connection pooling** - HikariCP for performance
+- **Migration support** - Hibernate DDL auto-generation
+
+### **Frontend Features:**
+- **Theme persistence** - localStorage for user preferences
+- **API integration** - Fetch API for CRUD operations
+- **Form validation** - Client-side and server-side validation
+- **Interactive animations** - CSS transitions and JavaScript effects
+
+## 🚀 Getting Started & Running
+
+### **Application Startup:**
+1. **Database Setup** - MySQL server running on localhost:3306
+2. **Environment Config** - Database credentials in application.properties
+3. **Maven Build** - `mvn spring-boot:run` starts embedded Tomcat
+4. **Application Access** - http://localhost:8080
+
+### **User Workflow:**
+1. **First Visit** → Login/Register page
+2. **Authentication** → Dashboard with feature overview
+3. **Task Management** → Create, organize, and track tasks
+4. **Progress Monitoring** → Analytics and notifications
+5. **Category Organization** → Structured task management
+
+This documentation covers the complete flow from user authentication through all application features, showing how each frontend template connects to its corresponding backend controllers and the overall data flow through the application layers.
