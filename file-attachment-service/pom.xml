@@ -42,6 +42,10 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-databind</artifactId>
+</dependency>
     </dependencies>
     <dependencyManagement>
         <dependencies>
@@ -59,6 +63,9 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>com.fileattachment.FileAttachmentServiceApplication</mainClass>
+                </configuration>
             </plugin>
         </plugins>
     </build>

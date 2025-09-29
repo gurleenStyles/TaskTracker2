@@ -1,10 +1,23 @@
 package com.userprofile.controller;
 
-import org.springframework.web.bind.annotation.*;
-import org.springframework.http.ResponseEntity;
-import java.util.*;
-import java.util.stream.Collectors;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/profile")
@@ -31,34 +44,34 @@ public class UserProfileController {
         return status;
     }
     
-    @GetMapping
+    @GetMapping(produces = "application/json")
     public List<UserProfile> getAllProfiles() {
         return new ArrayList<>(profiles.values());
     }
     
-    @GetMapping("/{id}")
+    @GetMapping(value = "/{id}", produces = "application/json")
     public ResponseEntity<UserProfile> getProfile(@PathVariable Long id) {
         UserProfile profile = profiles.get(id);
         return profile != null ? ResponseEntity.ok(profile) : ResponseEntity.notFound().build();
     }
     
-    @PostMapping
+    @PostMapping(consumes = "application/json", produces = "application/json")
     public UserProfile createProfile(@RequestBody CreateProfileRequest request) {
         UserProfile profile = new UserProfile(
             nextId++,
-            request.firstName(),
-            request.lastName(),
-            request.email(),
-            request.phone(),
-            request.bio(),
+            request.getFirstName(),
+            request.getLastName(),
+            request.getEmail(),
+            request.getPhone(),
+            request.getBio(),
             LocalDateTime.now(),
             LocalDateTime.now()
         );
-        profiles.put(profile.id(), profile);
+        profiles.put(profile.getId(), profile);
         return profile;
     }
     
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = "application/json", produces = "application/json")
     public ResponseEntity<UserProfile> updateProfile(@PathVariable Long id, @RequestBody CreateProfileRequest request) {
         UserProfile existing = profiles.get(id);
         if (existing == null) {
@@ -67,12 +80,12 @@ public class UserProfileController {
         
         UserProfile updated = new UserProfile(
             id,
-            request.firstName(),
-            request.lastName(),
-            request.email(),
-            request.phone(),
-            request.bio(),
-            existing.createdAt(),
+            request.getFirstName(),
+            request.getLastName(),
+            request.getEmail(),
+            request.getPhone(),
+            request.getBio(),
+            existing.getCreatedAt(),
             LocalDateTime.now()
         );
         profiles.put(id, updated);
@@ -85,13 +98,13 @@ public class UserProfileController {
         return removed != null ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
     }
     
-    @GetMapping("/search")
+    @GetMapping(value = "/search", produces = "application/json")
     public List<UserProfile> searchProfiles(@RequestParam(required = false) String name,
                                            @RequestParam(required = false) String email) {
         return profiles.values().stream()
             .filter(p -> name == null || 
-                (p.firstName() + " " + p.lastName()).toLowerCase().contains(name.toLowerCase()))
-            .filter(p -> email == null || p.email().toLowerCase().contains(email.toLowerCase()))
+                (p.getFirstName() + " " + p.getLastName()).toLowerCase().contains(name.toLowerCase()))
+            .filter(p -> email == null || p.getEmail().toLowerCase().contains(email.toLowerCase()))
             .collect(Collectors.toList());
     }
     
@@ -120,15 +133,15 @@ public class UserProfileController {
             this.updatedAt = updatedAt;
         }
         
-        // Getters
-        public Long id() { return id; }
-        public String firstName() { return firstName; }
-        public String lastName() { return lastName; }
-        public String email() { return email; }
-        public String phone() { return phone; }
-        public String bio() { return bio; }
-        public LocalDateTime createdAt() { return createdAt; }
-        public LocalDateTime updatedAt() { return updatedAt; }
+        // JavaBean-style Getters (required by Jackson)
+        public Long getId() { return id; }
+        public String getFirstName() { return firstName; }
+        public String getLastName() { return lastName; }
+        public String getEmail() { return email; }
+        public String getPhone() { return phone; }
+        public String getBio() { return bio; }
+        public LocalDateTime getCreatedAt() { return createdAt; }
+        public LocalDateTime getUpdatedAt() { return updatedAt; }
         
         // Setters
         public void setId(Long id) { this.id = id; }
@@ -158,12 +171,12 @@ public class UserProfileController {
             this.bio = bio;
         }
         
-        // Getters
-        public String firstName() { return firstName; }
-        public String lastName() { return lastName; }
-        public String email() { return email; }
-        public String phone() { return phone; }
-        public String bio() { return bio; }
+        // JavaBean-style Getters
+        public String getFirstName() { return firstName; }
+        public String getLastName() { return lastName; }
+        public String getEmail() { return email; }
+        public String getPhone() { return phone; }
+        public String getBio() { return bio; }
         
         // Setters  
         public void setFirstName(String firstName) { this.firstName = firstName; }

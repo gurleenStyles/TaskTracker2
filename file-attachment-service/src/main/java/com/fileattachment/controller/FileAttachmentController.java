@@ -1,14 +1,28 @@
 package com.fileattachment.controller;
 
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.http.ResponseEntity;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.time.LocalDateTime;
-import java.io.IOException;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @RestController
 @RequestMapping("/file")
@@ -16,7 +30,7 @@ import java.io.IOException;
 public class FileAttachmentController {
     
     // In-memory storage for demo purposes
-    private Map<Long, FileAttachment> files = new HashMap<>();
+    private final Map<Long, FileAttachment> files = new HashMap<>();
     private Long nextId = 1L;
     
     @GetMapping("/test")
@@ -24,7 +38,7 @@ public class FileAttachmentController {
         return "File Attachment Service is running on port 8081";
     }
     
-    @GetMapping("/health")
+    @GetMapping(value = "/health", produces = MediaType.APPLICATION_JSON_VALUE)
     public Map<String, Object> health() {
         Map<String, Object> status = new HashMap<>();
         status.put("service", "File Attachment Service");
@@ -32,30 +46,32 @@ public class FileAttachmentController {
         status.put("timestamp", LocalDateTime.now());
         status.put("port", 8081);
         status.put("files_count", files.size());
-        status.put("total_size_mb", files.values().stream()
-            .mapToLong(f -> f.size())
-            .sum() / (1024 * 1024));
+        long totalBytes = files.values().stream()
+            .mapToLong(f -> f.getSize() != null ? f.getSize() : 0L)
+            .sum();
+        status.put("total_size_mb", totalBytes / (1024.0 * 1024.0));
         return status;
     }
     
-    @GetMapping
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public List<FileAttachment> getAllFiles() {
+        // data field is @JsonIgnore so it won't be included
         return new ArrayList<>(files.values());
     }
     
-    @GetMapping("/{id}")
+    @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<FileAttachment> getFile(@PathVariable Long id) {
         FileAttachment file = files.get(id);
         return file != null ? ResponseEntity.ok(file) : ResponseEntity.notFound().build();
     }
     
-    @PostMapping("/upload")
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<FileAttachment> uploadFile(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "description", required = false) String description,
             @RequestParam(value = "tags", required = false) String tags) {
         
-        if (file.isEmpty()) {
+        if (file == null || file.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
         
@@ -66,41 +82,41 @@ public class FileAttachmentController {
                 file.getContentType(),
                 file.getSize(),
                 description,
-                tags != null ? Arrays.asList(tags.split(",")) : new ArrayList<>(),
+                tags != null ? Arrays.stream(tags.split(",")).map(String::trim).collect(Collectors.toList()) : new ArrayList<>(),
                 file.getBytes(),
                 LocalDateTime.now()
             );
-            files.put(attachment.id(), attachment);
+            files.put(attachment.getId(), attachment);
             
-            // Return attachment without file data for response
-            FileAttachment response = new FileAttachment(
-                attachment.id(),
-                attachment.fileName(),
-                attachment.contentType(),
-                attachment.size(),
-                attachment.description(),
-                attachment.tags(),
-                null, // Don't include file data in response
-                attachment.uploadedAt()
-            );
-            
-            return ResponseEntity.ok(response);
+            // Return stored attachment (data is ignored by JSON because of @JsonIgnore)
+            return ResponseEntity.ok(attachment);
         } catch (IOException e) {
             return ResponseEntity.internalServerError().build();
         }
     }
     
-    @GetMapping("/{id}/download")
+    @GetMapping(value = "/{id}/download")
     public ResponseEntity<byte[]> downloadFile(@PathVariable Long id) {
         FileAttachment file = files.get(id);
-        if (file == null || file.data() == null) {
+        if (file == null || file.getData() == null) {
             return ResponseEntity.notFound().build();
         }
         
+        String contentType = file.getContentType();
+        MediaType mediaType;
+        try {
+            mediaType = (contentType != null && !contentType.isBlank())
+                    ? MediaType.parseMediaType(contentType)
+                    : MediaType.APPLICATION_OCTET_STREAM;
+        } catch (Exception ex) {
+            mediaType = MediaType.APPLICATION_OCTET_STREAM;
+        }
+        
         return ResponseEntity.ok()
-            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.fileName() + "\"")
-            .contentType(MediaType.parseMediaType(file.contentType()))
-            .body(file.data());
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFileName() + "\"")
+            .contentType(mediaType)
+            .contentLength(file.getSize() != null ? file.getSize() : file.getData().length)
+            .body(file.getData());
     }
     
     @DeleteMapping("/{id}")
@@ -109,43 +125,34 @@ public class FileAttachmentController {
         return removed != null ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
     }
     
-    @GetMapping("/search")
+    @GetMapping(value = "/search", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<FileAttachment> searchFiles(@RequestParam(required = false) String fileName,
                                            @RequestParam(required = false) String contentType,
                                            @RequestParam(required = false) String tag) {
         return files.values().stream()
-            .filter(f -> fileName == null || f.fileName().toLowerCase().contains(fileName.toLowerCase()))
-            .filter(f -> contentType == null || f.contentType().toLowerCase().contains(contentType.toLowerCase()))
-            .filter(f -> tag == null || f.tags().stream().anyMatch(t -> t.toLowerCase().contains(tag.toLowerCase())))
-            .map(f -> new FileAttachment(f.id(), f.fileName(), f.contentType(), f.size(), 
-                f.description(), f.tags(), null, f.uploadedAt())) // Remove file data from search results
+            .filter(f -> fileName == null || (f.getFileName() != null && f.getFileName().toLowerCase().contains(fileName.toLowerCase())))
+            .filter(f -> contentType == null || (f.getContentType() != null && f.getContentType().toLowerCase().contains(contentType.toLowerCase())))
+            .filter(f -> tag == null || (f.getTags() != null && f.getTags().stream().anyMatch(t -> t.toLowerCase().contains(tag.toLowerCase()))))
             .collect(Collectors.toList());
     }
     
-    @PostMapping("/demo-files")
+    @PostMapping(value = "/demo-files", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<FileAttachment>> createDemoFiles() {
         // Create demo files for testing
         List<FileAttachment> demoFiles = Arrays.asList(
-            new FileAttachment(nextId++, "project-requirements.pdf", "application/pdf", 
-                2048576L, "Project requirements document", Arrays.asList("project", "requirements"), 
+            new FileAttachment(nextId++, "project-requirements.pdf", "application/pdf",
+                2048576L, "Project requirements document", Arrays.asList("project", "requirements"),
                 "Demo PDF content".getBytes(), LocalDateTime.now()),
-            new FileAttachment(nextId++, "user-guide.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", 
-                1024000L, "User guide documentation", Arrays.asList("documentation", "guide"), 
+            new FileAttachment(nextId++, "user-guide.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                1024000L, "User guide documentation", Arrays.asList("documentation", "guide"),
                 "Demo Word content".getBytes(), LocalDateTime.now()),
-            new FileAttachment(nextId++, "screenshot.png", "image/png", 
-                512000L, "Application screenshot", Arrays.asList("image", "screenshot"), 
+            new FileAttachment(nextId++, "screenshot.png", "image/png",
+                512000L, "Application screenshot", Arrays.asList("image", "screenshot"),
                 "Demo PNG content".getBytes(), LocalDateTime.now())
         );
         
-        demoFiles.forEach(file -> files.put(file.id(), file));
-        
-        // Return without file data
-        List<FileAttachment> response = demoFiles.stream()
-            .map(f -> new FileAttachment(f.id(), f.fileName(), f.contentType(), f.size(), 
-                f.description(), f.tags(), null, f.uploadedAt()))
-            .collect(Collectors.toList());
-            
-        return ResponseEntity.ok(response);
+        demoFiles.forEach(file -> files.put(file.getId(), file));
+        return ResponseEntity.ok(demoFiles);
     }
     
     // DTOs
@@ -156,6 +163,7 @@ public class FileAttachmentController {
         private Long size;
         private String description;
         private List<String> tags;
+        @JsonIgnore
         private byte[] data;
         private LocalDateTime uploadedAt;
         
@@ -173,15 +181,15 @@ public class FileAttachmentController {
             this.uploadedAt = uploadedAt;
         }
         
-        // Getters
-        public Long id() { return id; }
-        public String fileName() { return fileName; }
-        public String contentType() { return contentType; }
-        public Long size() { return size; }
-        public String description() { return description; }
-        public List<String> tags() { return tags; }
-        public byte[] data() { return data; }
-        public LocalDateTime uploadedAt() { return uploadedAt; }
+        // JavaBean-style Getters required by Jackson
+        public Long getId() { return id; }
+        public String getFileName() { return fileName; }
+        public String getContentType() { return contentType; }
+        public Long getSize() { return size; }
+        public String getDescription() { return description; }
+        public List<String> getTags() { return tags; }
+        public byte[] getData() { return data; }
+        public LocalDateTime getUploadedAt() { return uploadedAt; }
         
         // Setters
         public void setId(Long id) { this.id = id; }

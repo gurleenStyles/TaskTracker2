@@ -636,7 +636,7 @@
         
         // User Profile Service Functions
         async function checkProfileHealth() {
-            const response = await apiCall('http://localhost:8085/profile/health');
+            const response = await apiCall('http://localhost:8083/profile/health');
             if (response.success) {
                 document.getElementById('profile-status').className = 'status-indicator status-up';
                 document.getElementById('profile-status').textContent = 'UP';
@@ -648,7 +648,7 @@
         }
         
         async function loadAllProfiles() {
-            const response = await apiCall('http://localhost:8085/profile');
+            const response = await apiCall('http://localhost:8083/profile');
             displayResponse('profile-response', response, !response.success);
             
             if (response.success) {
@@ -680,7 +680,7 @@
                 bio: "Demo user profile for testing microservices"
             };
             
-            const response = await apiCall('http://localhost:8085/profile', {
+            const response = await apiCall('http://localhost:8083/profile', {
                 method: 'POST',
                 body: JSON.stringify(demoProfile)
             });
@@ -692,7 +692,7 @@
         }
         
         async function deleteProfile(id) {
-            const response = await apiCall(`http://localhost:8085/profile/${id}`, {
+            const response = await apiCall(`http://localhost:8083/profile/${id}`, {
                 method: 'DELETE'
             });
             
@@ -710,7 +710,7 @@
             if (name) params.append('name', name);
             if (email) params.append('email', email);
             
-            const response = await apiCall(`http://localhost:8085/profile/search?${params}`);
+            const response = await apiCall(`http://localhost:8083/profile/search?${params}`);
             displayResponse('profile-response', response, !response.success);
             
             const resultsContainer = document.getElementById('search-results');
@@ -721,7 +721,7 @@
         
         // File Attachment Service Functions
         async function checkFileHealth() {
-            const response = await apiCall('http://localhost:8085/file/health');
+            const response = await apiCall('http://localhost:8081/file/health');
             if (response.success) {
                 document.getElementById('file-status').className = 'status-indicator status-up';
                 document.getElementById('file-status').textContent = 'UP';
@@ -733,7 +733,7 @@
         }
         
         async function loadAllFiles() {
-            const response = await apiCall('http://localhost:8085/file');
+            const response = await apiCall('http://localhost:8081/file');
             displayResponse('file-response', response, !response.success);
             
             if (response.success) {
@@ -758,7 +758,7 @@
         }
         
         async function createDemoFiles() {
-            const response = await apiCall('http://localhost:8085/file/demo-files', {
+            const response = await apiCall('http://localhost:8081/file/demo-files', {
                 method: 'POST'
             });
             
@@ -769,7 +769,7 @@
         }
         
         async function deleteFile(id) {
-            const response = await apiCall(`http://localhost:8085/file/${id}`, {
+            const response = await apiCall(`http://localhost:8081/file/${id}`, {
                 method: 'DELETE'
             });
             
@@ -781,7 +781,7 @@
         
         async function downloadFile(id, fileName) {
             try {
-                const response = await fetch(`http://localhost:8085/file/${id}/download`);
+                const response = await fetch(`http://localhost:8081/file/${id}/download`);
                 if (response.ok) {
                     const blob = await response.blob();
                     const url = window.URL.createObjectURL(blob);
@@ -810,7 +810,7 @@
             if (contentType) params.append('contentType', contentType);
             if (tag) params.append('tag', tag);
             
-            const response = await apiCall(`http://localhost:8085/file/search?${params}`);
+            const response = await apiCall(`http://localhost:8081/file/search?${params}`);
             displayResponse('file-response', response, !response.success);
             
             const resultsContainer = document.getElementById('file-search-results');
@@ -859,7 +859,7 @@
             const formData = new FormData(e.target);
             const profile = Object.fromEntries(formData);
             
-            const response = await apiCall('http://localhost:8085/profile', {
+            const response = await apiCall('http://localhost:8083/profile', {
                 method: 'POST',
                 body: JSON.stringify(profile)
             });
@@ -877,7 +877,14 @@
             const description = document.getElementById('fileDescription').value;
             const tags = document.getElementById('fileTags').value;
             
-            if (fileInput.files.length === 0) return;
+            if (fileInput.files.length === 0) {
+                alert('Please select at least one file to upload.');
+                return;
+            }
+            
+            const uploadResults = [];
+            let successCount = 0;
+            let errorCount = 0;
             
             for (const file of fileInput.files) {
                 const formData = new FormData();
@@ -886,21 +893,48 @@
                 if (tags) formData.append('tags', tags);
                 
                 try {
-                    const response = await fetch('http://localhost:8085/file/upload', {
+                    const response = await fetch('http://localhost:8081/file/upload', {
                         method: 'POST',
                         body: formData
                     });
                     
                     const result = await response.json();
-                    displayResponse('file-response', { success: response.ok, data: result }, !response.ok);
+                    if (response.ok) {
+                        successCount++;
+                        uploadResults.push({ success: true, fileName: file.name, data: result });
+                    } else {
+                        errorCount++;
+                        uploadResults.push({ success: false, fileName: file.name, error: result });
+                    }
                 } catch (error) {
-                    displayResponse('file-response', { error: error.message }, true);
+                    errorCount++;
+                    uploadResults.push({ success: false, fileName: file.name, error: error.message });
                 }
+            }
+            
+            // Show summary
+            const summary = {
+                total: fileInput.files.length,
+                success: successCount,
+                errors: errorCount,
+                results: uploadResults
+            };
+            
+            displayResponse('file-response', summary, errorCount > 0);
+            
+            // Show alert with summary
+            if (successCount > 0 && errorCount === 0) {
+                alert(`✅ Successfully uploaded ${successCount} file(s)!`);
+            } else if (successCount > 0 && errorCount > 0) {
+                alert(`⚠️ Upload completed with mixed results: ${successCount} successful, ${errorCount} failed.`);
+            } else {
+                alert(`❌ Failed to upload ${errorCount} file(s). Please check the error details below.`);
             }
             
             e.target.reset();
             fileInput.value = '';
             document.getElementById('uploadBtn').disabled = true;
+            document.getElementById('uploadBtn').textContent = 'Upload Selected';
             loadAllFiles();
         });
         

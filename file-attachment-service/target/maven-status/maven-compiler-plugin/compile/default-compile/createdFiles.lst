@@ -1,3 +1,4 @@
 com\fileattachment\controller\FileAttachmentController$FileAttachment.class
 com\fileattachment\FileAttachmentServiceApplication.class
+com\fileattachment\config\GlobalCorsFilter.class
 com\fileattachment\controller\FileAttachmentController.class
